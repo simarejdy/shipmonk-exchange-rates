@@ -46,6 +46,18 @@ management:
 
 shipmonk:
   fixer:
-    url: http://data.fixer.io/api
-    api-key: ${FIXER_API_KEY:dummy_key_for_build}
-    plan: FREE
+    api-key: YOUR_API_KEY_HERE
+    base-url: "http://data.fixer.io/api"
+    base-currency: USD
+    capabilities:
+      allow-custom-currency-base: false
+    target-currencies:
+      - USD
+      - CZK
+      - GBP
+
+logging:
+  level:
+    root: INFO
+    com.shipmonk.testingday.rates: DEBUG
+

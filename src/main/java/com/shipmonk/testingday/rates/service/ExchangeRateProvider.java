@@ -1,4 +1,6 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.service;
+
+import com.shipmonk.testingday.rates.model.DailyExchangeRate;
 
 import java.time.LocalDate;
 

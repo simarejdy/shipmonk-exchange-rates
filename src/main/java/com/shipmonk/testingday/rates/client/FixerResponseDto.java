@@ -1,17 +1,16 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.client;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 
 public record FixerResponseDto(
     boolean success,
-    long timestamp,
+    Long timestamp,
     String base,
     LocalDate date,
     Map<String, BigDecimal> rates,
-    @JsonProperty("error") FixerError error
+    FixerError error // <--- We need this nested record
 ) {
-    public record FixerError(int code, String type) {}
+    public record FixerError(int code, String type, String info) {}
 }

@@ -1,4 +1,4 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.model;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
