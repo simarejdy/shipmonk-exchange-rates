@@ -10,5 +10,6 @@ CREATE TABLE currency_rate (
                              daily_rate_id BIGINT NOT NULL,
                              currency_code VARCHAR(3) NOT NULL,
                              exchange_rate NUMERIC(19, 6) NOT NULL,
-                             CONSTRAINT fk_daily_rate FOREIGN KEY (daily_rate_id) REFERENCES daily_exchange_rate (id)
+                             CONSTRAINT fk_daily_rate FOREIGN KEY (daily_rate_id) REFERENCES daily_exchange_rate (id),
+                             CONSTRAINT uk_daily_rate_currency UNIQUE (daily_rate_id, currency_code)
 );

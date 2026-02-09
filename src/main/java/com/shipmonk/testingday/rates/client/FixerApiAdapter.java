@@ -7,7 +7,6 @@ import com.shipmonk.testingday.rates.model.DailyExchangeRate;
 import com.shipmonk.testingday.rates.service.ExchangeRateCalculator;
 import com.shipmonk.testingday.rates.service.ExchangeRateProvider;
 import feign.FeignException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 public class FixerApiAdapter implements ExchangeRateProvider {
 
     private static final String FALLBACK_BASE_CURRENCY = "EUR";
-    private static final String TARGET_CURRENCY = "USD";
 
     private final FixerClient fixerClient;
     private final ExchangeRateCalculator calculator;
@@ -35,13 +33,15 @@ public class FixerApiAdapter implements ExchangeRateProvider {
     }
 
     @Override
-    @CircuitBreaker(name = "fixer-api", fallbackMethod = "fallbackRates")
     public DailyExchangeRate fetchRates(LocalDate date) {
-        String requestBase = properties.isAllowCustomCurrencyBase() ? TARGET_CURRENCY : FALLBACK_BASE_CURRENCY;
+        String targetCurrency = properties.getBaseCurrency();
+        String requestBase = properties.getCapabilities().isAllowCustomCurrencyBase()
+            ? targetCurrency
+            : FALLBACK_BASE_CURRENCY;
 
         String targetCurrencies = String.join(",", properties.getTargetCurrencies());
 
-        log.info("Requesting rates for date: {} [Base: {}]", date, targetCurrencies);
+        log.info("Requesting rates for date: {} [Base: {}]", date, requestBase);
 
         try {
             FixerResponseDto response = fixerClient.getRates(date, requestBase, targetCurrencies);
@@ -73,9 +73,9 @@ public class FixerApiAdapter implements ExchangeRateProvider {
                 currencyRates
             );
 
-            if (!entity.getSource().equalsIgnoreCase(TARGET_CURRENCY)) {
-                log.info("Normalizing rates from {} to target {}", entity.getSource(), TARGET_CURRENCY);
-                return calculator.convert(entity, TARGET_CURRENCY);
+            if (!entity.getSource().equalsIgnoreCase(targetCurrency)) {
+                log.info("Normalizing rates from {} to target {}", entity.getSource(), targetCurrency);
+                return calculator.convert(entity, targetCurrency);
             }
 
             return entity;
@@ -89,9 +89,4 @@ public class FixerApiAdapter implements ExchangeRateProvider {
         }
     }
 
-    @SuppressWarnings("unused")
-    public DailyExchangeRate fallbackRates(LocalDate date, Throwable t) {
-        log.error("Circuit Breaker Open: Fixer API unavailable for date {}. Reason: {}", date, t.getMessage());
-        throw new FixerApiException("Service temporarily unavailable. Please try again later.", t);
-    }
 }

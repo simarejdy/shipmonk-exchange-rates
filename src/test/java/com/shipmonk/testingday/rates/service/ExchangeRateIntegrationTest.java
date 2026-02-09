@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @AutoConfigureTestEntityManager
-class ExchangeRateITest {
+class ExchangeRateIntegrationTest {
 
     @Autowired
     private ExchangeRateService service;
@@ -49,11 +49,10 @@ class ExchangeRateITest {
         LocalDate today = LocalDate.now();
 
         List<CurrencyRate> apiRates = Arrays.asList(
-            new CurrencyRate("USD", new BigDecimal("1.10")),
             new CurrencyRate("CZK", new BigDecimal("25.50")),
             new CurrencyRate("GBP", new BigDecimal("0.85"))
         );
-        DailyExchangeRate apiResponse = new DailyExchangeRate(today, "EUR", apiRates);
+        DailyExchangeRate apiResponse = new DailyExchangeRate(today, "USD", apiRates);
 
         when(provider.fetchRates(today)).thenReturn(apiResponse);
 
@@ -63,12 +62,12 @@ class ExchangeRateITest {
         // THEN:
         assertThat(response.getSource()).isEqualTo("USD");
         assertThat(response.getRates()).containsKey("CZK");
-        assertThat(response.getRates()).containsKey("EUR");
+        assertThat(response.getRates()).doesNotContainKey("USD");
 
-        Optional<DailyExchangeRate> savedRate = repository.findByDate(today);
+        Optional<DailyExchangeRate> savedRate = repository.findByDate(today, "USD");
         assertThat(savedRate).isPresent();
-        assertThat(savedRate.get().getSource()).isEqualTo("EUR");
-        assertThat(savedRate.get().getRates()).hasSize(3);
+        assertThat(savedRate.get().getSource()).isEqualTo("USD");
+        assertThat(savedRate.get().getRates()).hasSize(2);
 
         verify(provider, times(1)).fetchRates(today);
     }
@@ -84,7 +83,7 @@ class ExchangeRateITest {
         );
         DailyExchangeRate existingRate = new DailyExchangeRate(yesterday, "USD", dbRates);
 
-        new TransactionTemplate(transactionManager).execute(status -> {
+        new TransactionTemplate(transactionManager).execute(_ -> {
             entityManager.persist(existingRate);
             entityManager.flush();
             return null;

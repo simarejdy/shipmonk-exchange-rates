@@ -13,8 +13,9 @@ shipmonk:
   fixer:
     api-key: "test-key"
     base-url: "http://localhost:8080"
+    base-currency: USD
     capabilities:
-      allow-custom-base: true
+      allow-custom-currency-base: true
     target-currencies:
       - USD
       - CZK

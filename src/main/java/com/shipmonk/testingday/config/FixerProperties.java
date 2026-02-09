@@ -12,8 +12,13 @@ import java.util.List;
 public class FixerProperties {
 
     private String apiKey;
-    private String url;
-    private boolean allowCustomCurrencyBase = false;
+    private String baseUrl;
+    private String baseCurrency = "USD";
+    private Capabilities capabilities = new Capabilities();
     private List<String> targetCurrencies = List.of("USD", "CZK", "GBP");
 
+    @Data
+    public static class Capabilities {
+        private boolean allowCustomCurrencyBase = false;
+    }
 }

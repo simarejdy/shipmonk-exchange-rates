@@ -3,6 +3,7 @@ package com.shipmonk.testingday.rates.service;
 import com.shipmonk.testingday.rates.model.DailyExchangeRate;
 import com.shipmonk.testingday.rates.model.ExchangeRateResponse; // Import the DTO
 import com.shipmonk.testingday.rates.repository.ExchangeRateRepository;
+import com.shipmonk.testingday.config.FixerProperties;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,23 +21,31 @@ public class ExchangeRateService {
     private final ExchangeRateRepository repository;
     private final ExchangeRateProvider provider;
     private final ExchangeRateCalculator calculator;
+    private final FixerProperties properties;
 
     public ExchangeRateService(ExchangeRateRepository repository,
                                ExchangeRateProvider provider,
-                               ExchangeRateCalculator calculator) {
+                               ExchangeRateCalculator calculator,
+                               FixerProperties properties) {
         this.repository = repository;
         this.provider = provider;
         this.calculator = calculator;
+        this.properties = properties;
     }
 
     @Transactional
     public ExchangeRateResponse getRatesForDate(LocalDate date) {
-        Optional<DailyExchangeRate> cachedRate = repository.findByDate(date);
+        if (date.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date cannot be in the future: " + date);
+        }
+
+        String baseCurrency = properties.getBaseCurrency();
+        Optional<DailyExchangeRate> cachedRate = repository.findByDate(date, baseCurrency);
 
         if (cachedRate.isPresent()) {
             log.info("Cache : Found rates for date {} in database. Returning instantly.", date);
 
-            return calculator.convertToDto(cachedRate.get(), "USD");
+            return calculator.convertToDto(cachedRate.get(), baseCurrency);
         }
 
         return fetchAndCache(date);
@@ -44,6 +53,7 @@ public class ExchangeRateService {
 
     private ExchangeRateResponse fetchAndCache(LocalDate date) {
         log.info("Cache : Rate not found for date {}. Fetching from provider...", date);
+        String baseCurrency = properties.getBaseCurrency();
 
         try {
             DailyExchangeRate fetchedRate = provider.fetchRates(date);
@@ -58,15 +68,16 @@ public class ExchangeRateService {
             }
 
             repository.persist(fetchedRate);
+            repository.flush();
             log.info("Successfully persisted rates for date: {}", date);
 
-            return calculator.convertToDto(fetchedRate, "USD");
+            return calculator.convertToDto(fetchedRate, baseCurrency);
 
         } catch (DataIntegrityViolationException | EntityExistsException e) {
             log.warn("Race condition detected for date: {}. Reading from DB instead.", date);
 
-            return repository.findByDate(date)
-                .map(rate -> calculator.convertToDto(rate, "USD")) // Convert here too
+            return repository.findByDate(date, baseCurrency)
+                .map(rate -> calculator.convertToDto(rate, baseCurrency))
                 .orElseThrow(() -> new IllegalStateException("Concurrency Error: Rate saved but not found.", e));
         }
     }
