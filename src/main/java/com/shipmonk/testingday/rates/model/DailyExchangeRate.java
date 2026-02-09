@@ -1,4 +1,4 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -26,7 +26,6 @@ public class DailyExchangeRate {
 
     protected DailyExchangeRate() {}
 
-    // PURE CONSTRUCTOR: Takes exactly what it needs (a List), not a messy Map.
     public DailyExchangeRate(LocalDate date, String source, List<CurrencyRate> rates) {
         this.date = date;
         this.source = source;

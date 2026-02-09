@@ -1,5 +1,7 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.controller;
 
+import com.shipmonk.testingday.rates.model.ExchangeRateResponse;
+import com.shipmonk.testingday.rates.service.ExchangeRateService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,15 +22,15 @@ public class ExchangeRatesController {
     }
 
     @GetMapping("/{date}")
-    public ResponseEntity<DailyExchangeRate> getRates(
+    public ResponseEntity<ExchangeRateResponse> getRates(
         @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         if (date.isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest().build();
         }
 
-        DailyExchangeRate rate = service.getRatesForDate(date);
+        ExchangeRateResponse response = service.getRatesForDate(date);
 
-        return ResponseEntity.ok(rate);
+        return ResponseEntity.ok(response);
     }
 }

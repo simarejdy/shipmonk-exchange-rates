@@ -1,4 +1,4 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.model;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.shipmonk.testingday.common.BaseId;

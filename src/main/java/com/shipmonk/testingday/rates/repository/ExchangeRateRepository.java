@@ -1,5 +1,6 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.repository;
 
+import com.shipmonk.testingday.rates.model.DailyExchangeRate;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;

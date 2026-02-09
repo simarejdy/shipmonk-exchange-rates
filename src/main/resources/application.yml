@@ -46,6 +46,22 @@ management:
 
 shipmonk:
   fixer:
-    url: http://data.fixer.io/api
-    api-key: ${FIXER_API_KEY:dummy_key_for_build}
-    plan: FREE
+    api-key: YOUR_API_KEY_HERE
+    base-url: "http://data.fixer.io/api"
+    capabilities:
+      allow-custom-currency-base: false
+
+logging:
+  level:
+    root: INFO
+    com.shipmonk.testingday.rates: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      fixer-api:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        slidingWindowSize: 5
+        ignoreExceptions:
+          - com.shipmonk.testingday.rates.exception.FixerApiException

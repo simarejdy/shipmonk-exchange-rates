@@ -1,4 +1,4 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.client;
 
 import com.shipmonk.testingday.config.FixerFeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -9,15 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 
-/**
- * ROHLIK STYLE: Declarative Client.
- * URL is read from config (allowing easy switch between HTTP/HTTPS or Free/Paid).
- */
-@FeignClient(
-    name = "fixer-client",
-    url = "${shipmonk.fixer.url:http://data.fixer.io/api}", // Default to HTTP (Free Tier)
-    configuration = FixerFeignConfig.class // Applies the API Key interceptor
-)
+@FeignClient(name = "fixer-client", url = "${shipmonk.fixer.base-url}", configuration = FixerFeignConfig.class)
 public interface FixerClient {
 
     @GetMapping("/{date}")

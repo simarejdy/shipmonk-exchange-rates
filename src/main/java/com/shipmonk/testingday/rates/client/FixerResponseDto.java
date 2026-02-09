@@ -1,4 +1,4 @@
-package com.shipmonk.testingday.rates;
+package com.shipmonk.testingday.rates.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
