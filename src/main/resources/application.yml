@@ -1,0 +1,51 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: shipmonk-exchange-rates
+
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/shipmonk-exchange-rates
+    username: shipmonk
+    password: secret
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
+        show_sql: false
+  mvc:
+    problemdetails:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
+shipmonk:
+  fixer:
+    url: http://data.fixer.io/api
+    api-key: ${FIXER_API_KEY:dummy_key_for_build}
+    plan: FREE
