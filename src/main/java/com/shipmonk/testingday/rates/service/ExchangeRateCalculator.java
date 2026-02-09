@@ -36,14 +36,22 @@ public class ExchangeRateCalculator {
     }
 
     private BigDecimal getPivotRate(DailyExchangeRate original, String targetCurrency) {
+        if (original.getRates() == null || original.getRates().isEmpty()) {
+            throw new IllegalStateException("Cannot calculate exchange rates: Source rates list is empty.");
+        }
+
         if (original.getSource().equalsIgnoreCase(targetCurrency)) {
             return BigDecimal.ONE;
         }
+
         return original.getRates().stream()
             .filter(r -> r.getCurrencyCode().equalsIgnoreCase(targetCurrency))
             .map(CurrencyRate::getExchangeRate)
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Target currency " + targetCurrency + " not found in rates"));
+            .orElseThrow(() -> new IllegalStateException(
+                String.format("Target currency %s not found in rates. Available: %s",
+                    targetCurrency, original.getRates().size())
+            ));
     }
 
     private Map<String, BigDecimal> calculateNewRates(DailyExchangeRate original, String targetCurrency, BigDecimal pivotRate) {

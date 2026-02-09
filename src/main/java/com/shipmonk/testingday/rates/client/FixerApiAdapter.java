@@ -39,16 +39,30 @@ public class FixerApiAdapter implements ExchangeRateProvider {
     public DailyExchangeRate fetchRates(LocalDate date) {
         String requestBase = properties.isAllowCustomCurrencyBase() ? TARGET_CURRENCY : FALLBACK_BASE_CURRENCY;
 
-        log.info("Requesting rates for date: {} [Base: {}]", date, requestBase);
+        String targetCurrencies = String.join(",", properties.getTargetCurrencies());
+
+        log.info("Requesting rates for date: {} [Base: {}]", date, targetCurrencies);
 
         try {
-            FixerResponseDto response = fixerClient.getRates(date, requestBase, "USD,CZK,GBP");
+            FixerResponseDto response = fixerClient.getRates(date, requestBase, targetCurrencies);
 
-            if (response == null || !response.success()) {
-                log.error("Fixer.io Business Error: {}", response);
-                throw new FixerApiException("Fixer API returned success=false. Check API Key or Plan constraints.");
+            if (response == null) {
+                log.error("Fixer API returned NULL response body for date: {}", date);
+                throw new FixerApiException("Fixer API returned empty response.");
             }
 
+            if (!response.success()) {
+                log.error("Fixer.io Business Error: {}", response);
+                String errorInfo = (response.error() != null) ? response.error().info() : "Unknown Error";
+                throw new FixerApiException("Fixer API failed: " + errorInfo);
+            }
+
+            if (response.rates() == null || response.rates().isEmpty()) {
+                log.error("Fixer.io returned success=true but NO rates. Response: {}", response);
+                throw new FixerApiException("Fixer API returned empty rates list.");
+            }
+
+            // 6. Map DTO to Entity
             List<CurrencyRate> currencyRates = response.rates().entrySet().stream()
                 .map(entry -> new CurrencyRate(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
@@ -67,10 +81,10 @@ public class FixerApiAdapter implements ExchangeRateProvider {
             return entity;
 
         } catch (FeignException e) {
-            log.error("Network Failure: {}", e.getMessage());
+            log.error("Network Failure: Status {}, Body: {}", e.status(), e.contentUTF8(), e);
             throw new FixerApiException("External service unavailable", e);
         } catch (Exception e) {
-            log.error("Unexpected error while fetching rates", e);
+            log.error("Unexpected error while processing rates", e);
             throw new FixerApiException("Unexpected error processing exchange rates", e);
         }
     }
